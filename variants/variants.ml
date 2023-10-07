@@ -10,12 +10,10 @@ type basic_color =
   | Magenta
   | Cyan
   | White
-[@@warning "-unused-constructor"]
 
 type weight =
   | Regular
   | Bold
-[@@warning "-unused-constructor"]
 
 type color =
   | Basic of basic_color * weight

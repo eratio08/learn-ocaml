@@ -1,3 +1,4 @@
 (executable
  (name variants)
  (libraries base stdio))
+
