@@ -1,0 +1,3 @@
+(executable
+ (name nested_mod)
+ (libraries base core))
