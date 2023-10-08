@@ -1,4 +1,4 @@
-(executable
- (name variants)
+(executables
+ (names variants)
  (libraries base stdio))
 

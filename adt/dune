@@ -1,3 +1,3 @@
-(executable
- (name adt)
+(executables
+ (names adt)
  (libraries base core))
