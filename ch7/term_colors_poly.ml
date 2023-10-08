@@ -2,19 +2,24 @@ open Base
 
 type basic_color =
   [ `Black
-  | `Red
-  | `Green
-  | `Yellow
   | `Blue
-  | `Magenta
   | `Cyan
+  | `Green
+  | `Magenta
+  | `Red
   | `White
+  | `Yellow
   ]
 
 type color =
-  [ `Basic of basic_color * [ `Basic | `Regular ]
+  [ `Basic of basic_color * [ `Bold | `Regular ]
   | `RGB of int * int * int (* 6x6x6 color cube *)
   | `Gray of int (* 24 grayscale levels *)
+  ]
+
+type extended_color =
+  [ color
+  | `RGBA of int * int * int * int
   ]
 
 let basic_color_to_int = function

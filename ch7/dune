@@ -1,0 +1,3 @@
+(executables
+ (names adt adt1 adt2 poly recursive term_colors_poly variants)
+ (libraries base core))

@@ -1,0 +1,3 @@
+(executables
+ (names nested_mod counter counter_old freq nested_mod_reuse)
+ (libraries base core stdio))
