@@ -1,0 +1,4 @@
+(executables
+ (names ch9 dictionary doubly_linked)
+ (libraries base stdio))
+
