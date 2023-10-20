@@ -1,4 +1,5 @@
 (executables
- (names ch9 dictionary doubly_linked)
- (libraries base stdio))
-
+ (names ch9 dictionary doubly_linked time_converter)
+ (libraries base stdio core core_unix.time_float_unix)
+ (preprocess (pps ppx_jane)))
+ 
