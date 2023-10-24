@@ -1,5 +1,5 @@
 (executables
  (names ch9 dictionary doubly_linked time_converter)
  (libraries base stdio core core_unix.time_float_unix)
- (preprocess (pps ppx_jane)))
- 
+ (preprocess
+  (pps ppx_jane)))

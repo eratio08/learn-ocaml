@@ -1,0 +1,3 @@
+(executables
+ (names ch10)
+ (libraries base stdio core core_unix.sys_unix))

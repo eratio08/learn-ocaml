@@ -1,5 +1,5 @@
 (executables
  (names errhandling blow_up bench_backtraces error_aware_types)
  (libraries base stdio core_bench core_unix.command_unix core)
- (preprocess (pps ppx_let)))
-
+ (preprocess
+  (pps ppx_let)))

@@ -1,5 +1,7 @@
 open Base
 
+(* Polymorphic Variants *)
+
 (* declaration without type keyword *)
 let three = `Int 3
 let four = `Float 4.0
