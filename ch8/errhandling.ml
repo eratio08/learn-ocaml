@@ -20,7 +20,7 @@ let compute_bounds ~compare list =
     Option.bind (List.last sorted) ~f:(fun last -> Some (first, last)))
 ;;
 
-(* using use monadic infix find  *)
+(* using use monadic infix find *)
 let compute_bounds' ~compare list =
   let open Option.Monad_infix in
   let sorted = List.sort ~compare list in

@@ -10,10 +10,12 @@ type 'a t = 'a element option ref
 
 (** Basic list operations *)
 let create () = ref None
+
 let is_empty t = Option.is_none !t
 
 (** Navigation using [element]s *)
 let value elt = elt.value
+
 let first t = !t
 let next elt = elt.next
 let prev elt = elt.prev
@@ -75,5 +77,3 @@ let find_el t ~f =
   in
   loop !t
 ;;
-
-

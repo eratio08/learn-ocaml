@@ -8,9 +8,8 @@ let list_max = function
   | hd :: tl -> List.fold tl ~init:hd ~f:Int.max
 ;;
 
-
 (* Will also turn off backtraces for this file *)
-Backtrace.Exn.set_recording  false
+Backtrace.Exn.set_recording false
 
 let () =
   printf "%d\n" (list_max [ 1; 2; 3 ]);
@@ -18,7 +17,7 @@ let () =
 ;;
 
 (* Will return most recent backtraces *)
-Backtrace.Exn.most_recent;;
+Backtrace.Exn.most_recent
 
 (* Base has backtraces enabled by default *)
 (* Using OCAMLRUNPARAM=b=0 will turn them off *)
