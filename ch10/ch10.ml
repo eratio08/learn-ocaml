@@ -308,3 +308,268 @@ end = struct
   let ( @> ) f t input = t (f input)
   let exec t input = t input
 end
+
+(* implement as GADTs *)
+type (_, _) pipeline =
+  | Step : ('a -> 'b) * ('b, 'c) pipeline -> ('a, 'c) pipeline
+  | Empty : ('a, 'a) pipeline
+
+let rec exec : type a b. (a, b) pipeline -> a -> b =
+  fun pipeline input ->
+  match pipeline with
+  | Empty -> input
+  | Step (f, tail) -> exec tail (f input)
+;;
+
+let exec_with_profile pipeline input =
+  let rec loop
+    : type a b.
+      (a, b) pipeline -> a -> Time_ns_unix.Span.t list -> b * Time_ns_unix.Span.t list
+    =
+    fun pipeline input rev_profile ->
+    match pipeline with
+    | Empty -> input, rev_profile
+    | Step (f, tail) ->
+      let start = Time_ns_unix.now () in
+      let output = f input in
+      let elapsed = Time_ns_unix.diff (Time_ns_unix.now ()) start in
+      loop tail output (elapsed :: rev_profile)
+  in
+  let output, rev_profile = loop pipeline input [] in
+  output, List.rev rev_profile
+;;
+
+(* Narrowing the Possibilities *)
+
+(* with out GADT the state might be modeled as following *)
+module User_name = struct
+  type t = Name of string
+end
+
+module User_id = struct
+  type t = Id of int
+end
+
+module Permissions = struct
+  type t =
+    | Read
+    | Write
+
+  let check permissions user_id = true
+end
+
+type logon_request =
+  { user_name : User_name.t
+  ; user_id : User_id.t option
+  ; permissions : Permissions.t option
+  }
+
+let authorize request =
+  match request.user_id, request.permissions with
+  | None, _ | _, None -> Error "Can't check authorization: data incomplete"
+  | Some user_id, Some permissions -> Ok (Permissions.check permissions user_id)
+;;
+
+(* A Completion-Sensitive Option Type *)
+(* these types will be used as marker *)
+type incomplete = Incomplete
+type complete = Complete
+
+type (_, _) coption =
+  | Absent : (_, incomplete) coption
+  | Present : 'a -> ('a, _) coption
+
+let get ~default o =
+  match o with
+  | Present x -> x
+  | Absent -> default
+;;
+
+let get' (o : (_, complete) coption) =
+  match o with
+  | Present x -> x
+;;
+
+let get'' (Present x : (_, complete) coption) = x
+
+(* A Completion-Sensitive Request Type *)
+type 'c logon_request' =
+  { user_name : User_name.t
+  ; user_id : (User_id.t, 'c) coption
+  ; permissions : (Permissions.t, 'c) coption
+  }
+
+let set_user_id request x = { request with user_id = Present x }
+let set_permissions request x = { request with permissions = Present x }
+
+(*
+   setting fields will not complete the type so the following will
+
+   using type annotation ensure the return type is not generic put complete
+*)
+let check_completeness request : complete logon_request' option =
+  match request.user_id, request.permissions with
+  | Absent, _ | _, Absent -> None
+  | (Present _ as user_id), (Present _ as permissions) ->
+    Some { request with user_id; permissions }
+;;
+
+(* will only work on completed coptionals *)
+let authorize (request : complete logon_request') =
+  let { user_id = Present user_id; permissions = Present permissions; _ } = request in
+  Permissions.check permissions user_id
+;;
+
+(*Type distinctness and Abstraction *)
+
+(*
+   the two marker types do not need to have a different constructor for
+   types to be distinct, variants are nominal
+*)
+type incomplete' = Z
+type complete' = Z
+
+let i = (Z : incomplete')
+and c = (Z : complete')
+
+(* the following is invalid, as they are not the same type *)
+(* [ i; c ] *)
+
+type ('a, _) coption' =
+  | Absent : (_, incomplete) coption'
+  | Present : 'a -> ('a, _) coption'
+
+let assume_complete (coption : (_, complete') coption') =
+  match coption with
+  | Present x -> x
+;;
+
+(* not exposing the variants will cause a problem *)
+module M : sig
+  type incomplete
+  type complete
+end = struct
+  type incomplete = Z
+  type complete = Z
+end
+
+type ('a, _) coption'' =
+  | Absent : (_, M.incomplete) coption''
+  | Present : 'a -> ('a, _) coption''
+
+(*
+   the match is not exhaustive any more, because the
+   underlying types are hidden from the type system
+*)
+
+(* let assume_complete' (coption : (_, M.complete) coption') = *)
+(*   match coption with *)
+(*   | Present x -> x *)
+(* ;; *)
+
+(* exposing the types in the signature might help*)
+module M' : sig
+  type incomplete = Z
+  type complete = Z
+end = struct
+  type incomplete = Z
+  type complete = Z
+end
+
+type ('a, _) coption''' =
+  | Absent : (_, M'.incomplete) coption'''
+  | Present : 'a -> ('a, _) coption'''
+
+(* still no luck, it's still not exhaustive *)
+
+(* let assume_complete' (coption : (_, M'.complete) coption'') = *)
+(*   match coption with *)
+(*   | Present x -> x *)
+(* ;; *)
+
+(* to be exhaustive the types need to be definitely different
+   as shown in the following, the types might be the same internally *)
+
+module M''' : sig
+  type incomplete = Z
+  type complete = Z
+end = struct
+  type incomplete = Z
+  type complete = incomplete = Z
+end
+
+(* Narrowing Without GADTs *)
+
+(* narrowing can also be done via the uninhabited type
+   it's a type with an associated value *)
+
+(* like Base.Nothing.t *)
+type nothing = |
+
+open Stdio
+
+let print_result (x : (int, string) Result.t) =
+  match x with
+  | Ok x -> printf "%d\n" x
+  | Error x -> printf "ERROR: %s\n" x
+;;
+
+(* can not print x of nothing in the error case*)
+
+(* let print_result' (x : (int, Nothing.t) Result.t) = *)
+(*   match x with *)
+(*   | Ok x -> printf "%d\n" x *)
+(*   | Error x -> printf "ERROR: %s\n" x *)
+(* ;; *)
+
+(* still a warning because the compiler know that the error case can not be reached *)
+(* let print_result' (x : (int, Nothing.t) Result.t) = *)
+(*   match x with *)
+(*   | Ok x -> printf "%d\n" x *)
+(*   | Error _ -> printf "ERROR\n" *)
+(* ;; *)
+
+(* using `.` to mark the refutation case *)
+let print_result' (x : (int, Nothing.t) Result.t) =
+  match x with
+  | Ok x -> printf "%d\n" x
+  | Error _ -> .
+;;
+
+(* as the case can not be reached, it can be omitted *)
+let print_result' (x : (int, Nothing.t) Result.t) =
+  match x with
+  | Ok x -> printf "%d\n" x
+;;
+
+(* narrowing can be useful for highly configurable libraries
+   to select specific modes
+   the following will demonstrate this using async rpc module
+*)
+open Core
+open Async
+
+let rpc =
+  Rpc.State_rpc.create
+    ~name:"int-map"
+    ~version:1
+    ~bin_query:[%bin_type_class: unit]
+    ~bin_state:[%bin_type_class: int Map.M(String).t]
+    ~bin_update:[%bin_type_class: int Map.M(String).t]
+    ~bin_error:[%bin_type_class: unit]
+    ()
+;;
+
+(* just a stub *)
+let handle_state_changes s u = Deferred.unit
+
+(*
+   the error and query type are unit here and the type system will ban this type
+   Error handling is
+*)
+let dispatch conn =
+  match%bind Rpc.State_rpc.dispatch rpc conn () >>| ok_exn with
+  | Ok (initial_state, updates, _) -> handle_state_changes initial_state updates
+;;
+
+(**)

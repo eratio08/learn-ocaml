@@ -1,3 +1,5 @@
 (executables
  (names ch10)
- (libraries base stdio core core_unix.sys_unix))
+ (libraries base stdio core core_unix.sys_unix core_unix.time_ns_unix async)
+ (preprocess
+  (pps ppx_jane)))
