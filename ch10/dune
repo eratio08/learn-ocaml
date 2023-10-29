@@ -1,5 +1,12 @@
 (executables
  (names ch10)
- (libraries base stdio core core_unix.sys_unix core_unix.time_ns_unix async)
+ (libraries
+  base
+  stdio
+  core
+  core_unix.sys_unix
+  core_unix.time_ns_unix
+  async
+  ppx_sexp_conv.runtime-lib)
  (preprocess
-  (pps ppx_jane)))
+  (pps ppx_jane ppx_sexp_value)))

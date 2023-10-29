@@ -287,12 +287,13 @@ end
 (* functor *)
 module Example_pipeline (Pipeline : Pipeline) = struct
   open Pipeline
+  open Core_unix
 
   let sum_files_size =
     (fun () -> Sys_unix.ls_dir ".")
     @> List.filter ~f:Sys_unix.is_file_exn
-    @> List.map ~f:(fun file_name -> (Unix.lstat file_name).st_size)
-    @> List.sum (module Int) ~f:Int.to_int_exn
+    @> List.map ~f:(fun file_name -> (Core_unix.lstat file_name).st_size)
+    @> List.sum (module Int) ~f:Int64.to_int_exn
     @> empty
   ;;
 end
@@ -570,6 +571,83 @@ let handle_state_changes s u = Deferred.unit
 let dispatch conn =
   match%bind Rpc.State_rpc.dispatch rpc conn () >>| ok_exn with
   | Ok (initial_state, updates, _) -> handle_state_changes initial_state updates
+  | Error () -> Deferred.unit
 ;;
 
-(**)
+(* Limitations of GADTs *)
+(* Or-Patterns *)
+module Host_and_port = struct
+  type t =
+    { host : string
+    ; port : int
+    }
+
+  let sexp_of_t t = Sexp.Atom "dummy"
+end
+
+module Source_kind = struct
+  type _ t =
+    | Filename : string t
+    | Host_and_port : Host_and_port.t t
+    | Raw_data : string t
+end
+
+let source_to_sexp (type a) (kind : a Source_kind.t) (source : a) : Sexp.t =
+  match kind with
+  | Filename -> String.sexp_of_t source
+  | Host_and_port -> Host_and_port.sexp_of_t source
+  | Raw_data -> String.sexp_of_t source
+;;
+
+(* the code for Filename and Raw_data is the same but trying to merge these
+   using `|` (or-pattern)  will fail here as the type information that
+   is discovered during the pattern match is used
+
+   if this information is not used it can work e.g. in the following
+*)
+
+let requires_io (type a) (kind : a Source_kind.t) =
+  match kind with
+  | Filename | Host_and_port -> true
+  | Raw_data -> false
+;;
+
+(* Deriving Serializers *)
+
+(* to generate s-expressions the pre-processor `ppx_sexp_value` is used *)
+type position =
+  { x : float
+  ; y : float
+  }
+[@@derive sexp]
+
+(* sexp_of_position { x = 3.5; y = -2. };; *)
+(* position_of_sexp (Sexp.of_string "((x 72) (y 1.2)") *)
+
+(* this `sexp` does not work well with GADTs
+   number_kind_of_sexp cannot be expresses with the ocaml type system
+*)
+type _ number_kind =
+  | Int : int number_kind
+  | Float : float number_kind
+[@@deriving sexp_of]
+
+(* writing a deserialiser is hard but possible *)
+type packed_number_kind = P : _ number_kind -> packed_number_kind
+
+type simple_number_kind =
+  | Int
+  | Float
+[@@deriving of_sexp]
+
+let simple_number_kind_of_packed_number_kind kind : packed_number_kind =
+  match kind with
+  | Int -> P Int
+  | Float -> P Float
+;;
+
+let number_kind_of_sexp sexp =
+  simple_number_kind_of_sexp sexp |> simple_number_kind_of_packed_number_kind
+;;
+
+List.map ~f:number_kind_of_sexp [ Sexp.of_string "Float"; Sexp.of_string "Int" ]
