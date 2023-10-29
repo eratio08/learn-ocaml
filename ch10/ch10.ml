@@ -619,10 +619,10 @@ type position =
   { x : float
   ; y : float
   }
-[@@derive sexp]
+  [@@deriving sexp];;
 
-(* sexp_of_position { x = 3.5; y = -2. };; *)
-(* position_of_sexp (Sexp.of_string "((x 72) (y 1.2)") *)
+sexp_of_position { x = 3.5; y = -2. };;
+position_of_sexp (Sexp.of_string "((x 72) (y 1.2)")
 
 (* this `sexp` does not work well with GADTs
    number_kind_of_sexp cannot be expresses with the ocaml type system
