@@ -1,0 +1,3 @@
+(executables
+ (names ch11)
+ (libraries base core stdio))
