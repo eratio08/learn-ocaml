@@ -1,5 +1,4 @@
 (executables
  (names ch11)
  (libraries base core stdio)
- (preprocess
-  (pps ppx_jane)))
+ (preprocess (pps ppx_jane)))
