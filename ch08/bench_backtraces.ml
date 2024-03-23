@@ -37,7 +37,7 @@ let () =
   |> Command_unix.run
 ;;
 
-(* Run benchmark with: dune exec -- errhandling/bench_backtraces.exe -ascii -quota 1s*)
+(* Run benchmark with: dune exec -- ch08/bench_backtraces.exe -ascii -quota 1s*)
 
 (*
    Name                    Time/Run   Percentage
