@@ -1,0 +1,103 @@
+; does some compiles the wrong binary
+; (executables
+;  (public_names ch16 md5 md5v2)
+;  (names ch16 md5 md5v2)
+;  (libraries core core_unix.command_unix)
+;  (preprocess (pps ppx_jane)))
+
+(executable
+  (name ch16)
+  (public_name ch16)
+  (modules ch16)
+  (libraries))
+
+(executable
+  (name md5)
+  (public_name md5)
+  (modules md5)
+  (libraries core core_unix.command_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v2)
+  (modules md5v2)
+  (public_name md5v2)
+  (libraries core core_unix.command_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v3)
+  (modules md5v3)
+  (public_name md5v3)
+  (libraries core core_unix.command_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v4)
+  (modules md5v4)
+  (public_name md5v4)
+  (libraries core core_unix.command_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v5)
+  (modules md5v5)
+  (public_name md5v5)
+  (libraries core core_unix.command_unix core_unix.filename_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v6)
+  (modules md5v6)
+  (public_name md5v6)
+  (libraries core core_unix.command_unix core_unix.filename_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v7)
+  (modules md5v7)
+  (public_name md5v7)
+  (libraries core core_unix.command_unix core_unix.filename_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v8)
+  (modules md5v8)
+  (public_name md5v8)
+  (libraries core core_unix.command_unix core_unix.filename_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v9)
+  (modules md5v9)
+  (public_name md5v9)
+  (libraries core core_unix.command_unix core_unix.filename_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name md5v10)
+  (modules md5v10)
+  (public_name md5v10)
+  (libraries core core_unix.command_unix core_unix.filename_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name cal)
+  (modules cal)
+  (public_name cal)
+  (libraries core core_unix.command_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name calv2)
+  (modules calv2)
+  (public_name calv2)
+  (libraries core core_unix.command_unix)
+  (preprocess (pps ppx_jane)))
+
+(executable
+  (name calv3)
+  (modules calv3)
+  (public_name calv3)
+  (libraries core core_unix.command_unix)
+  (preprocess (pps ppx_jane)))
